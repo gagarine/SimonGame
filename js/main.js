@@ -3,6 +3,10 @@
  */
 
 
+
+// Launch init on Document ready...
+document.addEventListener('DOMContentLoaded', init );
+
 /**
  *  Class Simon Game
  * @param btns
@@ -29,7 +33,6 @@ SimonGame.prototype.play = function () {
     var that = this;
     for (var key in this.btns) {
         // @Todo
-        // - Implement the https://developers.google.com/mobile/articles/fast_buttons technique
         // - Move the listener in the buton object
         // - The button control is lightup and sound not the game object
         // - The game just lisen for button press and check if it's the right one
@@ -173,5 +176,3 @@ function init() {
 }
 
 
-// Launch init on Document ready...
-document.addEventListener('DOMContentLoaded', init );
