@@ -29,9 +29,6 @@ SimonGame.prototype.play = function () {
     var that = this;
     for (var key in this.btns) {
         (function (key, currentBtn, synthetiser) {
-            currentBtn.element.addEventListener('click', function(e){
-                e.preventDefault();
-            })
             currentBtn.element.addEventListener( 'mousedown', function () {
                 // Click the right button?
                 if(that.sequence[that.playerStep] == key){

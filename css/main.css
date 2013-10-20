@@ -111,6 +111,7 @@ body {
     width: 50%;
     float:left;
     transition:opacity 0.1s ease-out;
+    cursor:pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
