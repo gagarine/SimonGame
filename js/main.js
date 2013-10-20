@@ -15,43 +15,67 @@ function SimonGame(btns, synthesizer) {
     this.numberOfLevel = 50;
     this.currentLevel = 0;
     this.sequence = '';
-    this.playingStep = null;
-    this.speed = 350;
+    this.playerStep = 0;
+    this.speed = 300;
+    this.over = false;
 }
 
 SimonGame.prototype.play = function () {
     // this.btnGreen.lightUp();
     // this.synthesizer.play(this.btnGreen.soundFrequency);
+
     this.sequence = this.generateSequence();
     this.playSequence(0);
-
     var that = this;
     for (var key in this.btns) {
-        (function (currentBtn, synthetiser) {
+        (function (key, currentBtn, synthetiser) {
             currentBtn.element.addEventListener( 'mousedown', function () {
-                currentBtn.lightUp();
-                synthetiser.play(currentBtn.soundFrequency);
+                if(that.sequence[that.playerStep] == key){
+                    currentBtn.lightUp();
+                    synthetiser.play(currentBtn.soundFrequency);
+                } else {
+                    that.gameOver();
+                }
             }, false);
             currentBtn.element.addEventListener('mouseup', function () {
-                currentBtn.lightDown();
-                synthetiser.stop();
+                if(that.over == false ){
+                    currentBtn.lightDown();
+                    synthetiser.stop();
+                    if(that.playerStep == that.currentLevel) {
+                        that.currentLevel = that.currentLevel + 1;
+                        that.playerStep = 0;
+                        setTimeout(function(){that.playSequence(0) }, 500);
+                    } else {
+                        that.playerStep = that.playerStep + 1;
+                    }
+                }
             }, false);
-        })(this.btns[key],this.synthesizer);
+        })(key, this.btns[key],this.synthesizer);
     }
 };
 
+SimonGame.prototype.gameOver = function() {
+    this.synthesizer.stop();
+    this.sequence = '12301230';
+    this.currentLevel = 6;
+    this.speed = 100;
+    this.playSequence(0);
+    this.over = true;
+    // Todo display reload button
+};
+
 SimonGame.prototype.playSequence = function (step) {
-    var that = this; // stupid JS
+    var that = this;
     this.btns[this.sequence[step]].lightUp();
     this.synthesizer.play(this.btns[this.sequence[step]].soundFrequency);
     setTimeout(function () {
         that.btns[that.sequence[step]].lightDown();
         that.synthesizer.stop(); //
         if (step < that.currentLevel) {
-            that.playSequence(step + 1);
+            setTimeout(function(){ that.playSequence(step + 1) },200);
         }
     }, this.speed);
-}
+};
 
 SimonGame.prototype.generateSequence = function () {
     var sequence = "";
@@ -59,7 +83,7 @@ SimonGame.prototype.generateSequence = function () {
         sequence += Math.floor((Math.random() * 4)); // add a random number from 0 to 3 (we can use btns.lenght...)
     }
     return sequence;
-}
+};
 
 
 /**
@@ -96,6 +120,7 @@ Button.prototype.release = function () {
  * @constructor
  */
 function Synthesizer() {
+    this.oscillator = null;
     try {
         this.audio_context = new (window.AudioContext || window.webkitAudioContext);
     } catch (e) {
