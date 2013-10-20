@@ -34,6 +34,17 @@ SimonGame.prototype.play = function () {
         // - The button control is lightup and sound not the game object
         // - The game just lisen for button press and check if it's the right one
         (function (key, currentBtn, synthetiser) {
+            // Duplicate code to test on mobile.... TODO remove that ASAP
+            currentBtn.element.addEventListener( 'touchstart', function (e) {
+                event.stopPropagation(); // avoid the click event
+                // Click the right button?
+                if(that.sequence[that.playerStep] == key){
+                    currentBtn.lightUp();
+                    synthetiser.play(currentBtn.soundFrequency);
+                } else {
+                    that.gameOver();
+                }
+            }, false);
             currentBtn.element.addEventListener( 'mousedown', function () {
                 // Click the right button?
                 if(that.sequence[that.playerStep] == key){
