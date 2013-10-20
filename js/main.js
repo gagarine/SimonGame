@@ -29,7 +29,11 @@ SimonGame.prototype.play = function () {
     var that = this;
     for (var key in this.btns) {
         (function (key, currentBtn, synthetiser) {
+            currentBtn.element.addEventListener('click', function(e){
+                e.preventDefault();
+            })
             currentBtn.element.addEventListener( 'mousedown', function () {
+                // Click the right button?
                 if(that.sequence[that.playerStep] == key){
                     currentBtn.lightUp();
                     synthetiser.play(currentBtn.soundFrequency);
@@ -62,7 +66,15 @@ SimonGame.prototype.gameOver = function() {
     this.playSequence(0);
     this.over = true;
     // Todo display reload button
+    var that = this;
+    setTimeout(function(){
+        that.speed = 300;
+        that.currentLevel = 0;
+        that.play();
+    }, 2000)
 };
+
+
 
 SimonGame.prototype.playSequence = function (step) {
     var that = this;
