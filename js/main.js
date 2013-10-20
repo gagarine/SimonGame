@@ -174,4 +174,4 @@ function init() {
 
 
 // Launch init on Document ready...
-document.addEventListener('DOMContentLoaded', init());
+document.addEventListener('DOMContentLoaded', init );
