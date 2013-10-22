@@ -13,81 +13,66 @@ document.addEventListener('DOMContentLoaded', init );
  * @param synthesizer
  * @constructor
  */
-function SimonGame(btns, synthesizer) {
+function SimonGame(btns) {
     this.btns = btns;
-    this.synthesizer = synthesizer;
     this.numberOfLevel = 50;
     this.currentLevel = 0;
     this.sequence = '';
     this.playerStep = 0;
     this.speed = 300;
-    this.over = false;
+
+    document.addEventListener('buttonPress', this.buttonClickHandler.bind(this), false);
 }
 
 SimonGame.prototype.play = function () {
-    // this.btnGreen.lightUp();
-    // this.synthesizer.play(this.btnGreen.soundFrequency);
-
     this.sequence = this.generateSequence();
     this.playSequence(0);
-    var that = this;
-    for (var key in this.btns) {
-        // @Todo
-        // - Move the listener in the buton object
-        // - The button control is lightup and sound not the game object
-        // - The game just lisen for button press and check if it's the right one
-        (function (key, currentBtn, synthetiser) {
-            currentBtn.element.addEventListener( 'mousedown', function () {
-                // Click the right button?
-                if(that.sequence[that.playerStep] == key){
-                    currentBtn.lightUp();
-                    synthetiser.play(currentBtn.soundFrequency);
-                } else {
-                    that.gameOver();
-                }
-            }, false);
-            currentBtn.element.addEventListener('mouseup', function () {
-                if(that.over == false ){
-                    currentBtn.lightDown();
-                    synthetiser.stop();
-                    if(that.playerStep == that.currentLevel) {
-                        that.currentLevel = that.currentLevel + 1;
-                        that.playerStep = 0;
-                        setTimeout(function(){that.playSequence(0) }, 500);
-                    } else {
-                        that.playerStep = that.playerStep + 1;
-                    }
-                }
-            }, false);
-        })(key, this.btns[key],this.synthesizer);
+};
+
+SimonGame.prototype.buttonClickHandler = function (event) {
+
+    if (this.isValidKey(this.playerStep, event.detail.key)) {
+        if (this.playerStep == this.currentLevel) {
+            this.nextLevel();
+        } else {
+            this.nextStep()
+        }
+    } else {
+        this.gameOver();
     }
 };
 
-SimonGame.prototype.gameOver = function() {
-    this.synthesizer.stop();
-    this.sequence = '12301230';
-    this.currentLevel = 6;
-    this.speed = 100;
-    this.playSequence(0);
-    this.over = true;
-    // Todo display reload button
+SimonGame.prototype.nextLevel = function () {
     var that = this;
-    setTimeout(function(){
-        that.speed = 300;
-        that.currentLevel = 0;
-        that.play();
-    }, 2000)
+    this.currentLevel = this.currentLevel + 1;
+    this.playerStep = 0;
+    setTimeout(function () {
+        that.playSequence(0)
+    }, 500);
+};
+
+SimonGame.prototype.nextStep = function () {
+    this.playerStep = this.playerStep + 1;
+};
+
+SimonGame.prototype.isValidKey = function (step, key) {
+    return this.sequence[step] == key;
+};
+
+SimonGame.prototype.gameOver = function() {
+    console.log('game over!');
+    var that = this;
+    that.currentLevel = 0;
+    setTimeout(function() { that.play(); }, 2000)
 };
 
 
 
 SimonGame.prototype.playSequence = function (step) {
     var that = this;
-    this.btns[this.sequence[step]].lightUp();
-    this.synthesizer.play(this.btns[this.sequence[step]].soundFrequency);
+    this.btns[this.sequence[step]].down();
     setTimeout(function () {
-        that.btns[that.sequence[step]].lightDown();
-        that.synthesizer.stop(); //
+        that.btns[that.sequence[step]].up();
         if (step < that.currentLevel) {
             setTimeout(function(){ that.playSequence(step + 1) },200);
         }
@@ -109,10 +94,22 @@ SimonGame.prototype.generateSequence = function () {
  * @param element
  * @param soundFrequency
  * @constructor
+ * @param key
+ * @param synthesizer
  */
-function Button(element, soundFrequency) {
+function Button(key, element, soundFrequency, synthesizer) {
+    this.key = key;
     this.element = element;
+    this.synthesizer = synthesizer;
     this.soundFrequency = soundFrequency;
+
+    this.pressEvent = new CustomEvent('buttonPress', { 'detail': { 'key': this.key }});
+    this.releaseEvent = new CustomEvent('buttonRelease', { 'detail': { 'key': this.key }});
+
+    // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget.addEventListener#The_value_of_this_within_the_handler
+    this.element.addEventListener('mousedown', this.press.bind(this), false);
+    this.element.addEventListener('mouseup', this.release.bind(this), false);
+
 }
 
 Button.prototype.lightUp = function () {
@@ -123,12 +120,25 @@ Button.prototype.lightDown = function () {
     this.element.classList.remove("lightUp");
 };
 
-Button.prototype.pressed = function () {
-    this.lightUp();
+Button.prototype.press = function () {
+    document.dispatchEvent(this.pressEvent);
+    this.down();
 };
 
 Button.prototype.release = function () {
+    document.dispatchEvent(this.releaseEvent);
+    this.up();
+};
+
+Button.prototype.down = function () {
+    this.lightUp();
+    this.synthesizer.play(this.soundFrequency);
+
+};
+
+Button.prototype.up = function () {
     this.lightDown();
+    this.synthesizer.stop();
 };
 
 /**
@@ -160,18 +170,16 @@ Synthesizer.prototype.stop = function () {
 
 /////// INIT
 function init() {
-    var btns, synthesizer, mySimonGame;
+    var btns, mySimonGame;
 
     btns = [];
 
-    btns.push(new Button(document.getElementById('btnGreen'), 330));
-    btns.push(new Button(document.getElementById('btnRed'), 261));
-    btns.push(new Button(document.getElementById('btnYellow'), 392));
-    btns.push(new Button(document.getElementById('btnBlue'), 523));
+    btns.push(new Button(0, document.getElementById('btnGreen'), 330, new Synthesizer()));
+    btns.push(new Button(1, document.getElementById('btnRed'), 261, new Synthesizer()));
+    btns.push(new Button(2, document.getElementById('btnYellow'), 392, new Synthesizer()));
+    btns.push(new Button(3, document.getElementById('btnBlue'), 523, new Synthesizer()));
 
-    synthesizer = new Synthesizer();
-
-    mySimonGame = new SimonGame(btns, synthesizer);
+    mySimonGame = new SimonGame(btns);
     mySimonGame.play();
 }
 
